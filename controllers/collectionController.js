@@ -34,7 +34,7 @@ exports.createCollection = async (req, res) => {
       console.log("perent no present");
       const user = await User.findById(req.user.id);
       user.mainCollection.push({ id: collection._id, type: 'Collection' });
-      const addAyy=await user.save();
+      const addAyy = await user.save();
       console.log(addAyy);
     }
 
@@ -94,14 +94,36 @@ exports.updateCollection = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-
 // Delete a collection
 exports.deleteCollection = async (req, res) => {
   try {
-    const collection = await Collection.findByIdAndDelete(req.params.id);
+    const collection = await Collection.findById(req.params.id);
+
     if (!collection) return res.status(404).json({ message: 'Collection not found' });
+
+    // Check if the parentId is null
+    if (collection.parentId === null) {
+      // Remove from user's mainCollection
+      const user = await User.findById(collection.createBy);
+      if (user) {
+        user.mainCollection = user.mainCollection.filter(c => c.id.toString() !== req.params.id);
+        await user.save();
+      }
+    } else {
+      // Remove from parent collection's childCollections
+      const parentCollection = await Collection.findById(collection.parentId);
+      if (parentCollection) {
+        parentCollection.childCollections = parentCollection.childCollections.filter(c => c.id.toString() !== req.params.id);
+        await parentCollection.save();
+      }
+    }
+
+    // Now delete the collection
+    await collection.deleteOne();
+
     res.json({ message: 'Collection deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+

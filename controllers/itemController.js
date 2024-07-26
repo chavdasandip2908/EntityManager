@@ -1,5 +1,6 @@
 const Item = require('../models/Item');
 const User = require('../models/User');
+const Collection = require('../models/Collection');
 
 // Create a new item
 exports.createItem = async (req, res) => {
@@ -21,7 +22,7 @@ exports.createItem = async (req, res) => {
         parentCollection.childCollections.push({ id: item._id, type: 'Item' });
         await parentCollection.save();
       }
-    }else {
+    } else {
       // If parentId is null, add this item to the user's mainCollection
       const user = await User.findById(req.user.id);
       user.mainCollection.push({ id: item._id, type: 'Item' });
@@ -69,8 +70,29 @@ exports.updateItem = async (req, res) => {
 // Delete an item
 exports.deleteItem = async (req, res) => {
   try {
-    const item = await Item.findByIdAndDelete(req.params.id);
+    const item = await Item.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Item not found' });
+
+    // Check if the parentId is null
+    if (item.parentId === null) {
+      // Remove from user's mainCollection
+      const user = await User.findById(item.createBy);
+      if (user) {
+        user.mainCollection = user.mainCollection.filter(c => c.id.toString() !== req.params.id);
+        await user.save();
+      }
+    } else {
+      // Remove from parent collection's childCollections
+      const parentCollection = await Collection.findById(item.parentId);
+      if (parentCollection) {
+        parentCollection.childCollections = parentCollection.childCollections.filter(c => c.id.toString() !== req.params.id);
+        await parentCollection.save();
+      }
+    }
+
+    // Now delete the item
+    await item.deleteOne();
+
     res.json({ message: 'Item deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
