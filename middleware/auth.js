@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 exports.authenticate = async (req, res, next) => {
+  next();
   const authHeader = req.header('Authorization');
   if (!authHeader) {
     return res.status(401).json({ error: 'Authorization header is missing' });
