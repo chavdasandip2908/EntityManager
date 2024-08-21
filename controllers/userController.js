@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Item = require('../models/Item');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const handleDuplicateKeyError = require('../config/common');
 
 // Create a new user
 exports.createUser = async (req, res) => {
@@ -17,7 +18,8 @@ exports.createUser = async (req, res) => {
     const savedUser = await newUser.save();
     res.status(201).json(savedUser);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({ message });
   }
 };
 
@@ -27,7 +29,8 @@ exports.getUsers = async (req, res) => {
     const users = await User.find();
     res.json(users);
   } catch (error) {
-    res.status(500).json({ error: error });
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({ message });
   }
 };
 
@@ -46,7 +49,8 @@ exports.loginUser = async (req, res) => {
     const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ token });
   } catch (error) {
-    res.status(400).json({ error: error });
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({ message });
   }
 };
 
@@ -68,7 +72,8 @@ exports.getUserById = async (req, res) => {
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: error });
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({ message });
   }
 };
 
@@ -79,7 +84,8 @@ exports.updateUser = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (error) {
-    res.status(400).json({ error: error });
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({ message });
   }
 };
 
@@ -90,6 +96,7 @@ exports.deleteUser = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json({ message: 'User deleted' });
   } catch (error) {
-    res.status(500).json({ error: error });
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({ message });
   }
 };
