@@ -4,13 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-<<<<<<< HEAD
     "start":"node index.js",
     "dev":"nodemon index.js",
-=======
-    "start": "node index.js",
-    "dev": "nodemon index.js",
->>>>>>> 767ce9f (finally commit)
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

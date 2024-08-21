@@ -4,10 +4,6 @@ const itemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   type: { type: String, required: true },
   description: { type: String },
-<<<<<<< HEAD
-=======
-  image: { type: String, required: true },
->>>>>>> 767ce9f (finally commit)
   parentId: { type: String },
   createBy: { type: String },
   createAt: { type: Date, default: Date.now },
