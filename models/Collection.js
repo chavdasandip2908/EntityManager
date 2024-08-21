@@ -4,6 +4,7 @@ const collectionSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: { type: String },
   parentId: { type: String },
+  image : { type: String, required: true },
   childCollections: [{
     id: { type: String },
     type: { type: String, required: true, enum: ['Collection', 'Item'] }

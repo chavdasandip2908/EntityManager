@@ -4,6 +4,7 @@ const itemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   type: { type: String, required: true },
   description: { type: String },
+  image : { type: String, required: true },
   parentId: { type: String },
   createBy: { type: String },
   createAt: { type: Date, default: Date.now },
