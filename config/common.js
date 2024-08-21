@@ -12,6 +12,7 @@ module.exports = function handleDuplicateKeyError(error) {
             message: friendlyMessage,
         };
     }
+    
 
     // If it's not a duplicate key error, return a generic error message
     return {
@@ -19,5 +20,3 @@ module.exports = function handleDuplicateKeyError(error) {
         message: 'An unexpected error occurred. Please try again later.',
     };
 }
-
-//   module.experts= handleDuplicateKeyError;

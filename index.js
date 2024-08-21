@@ -13,9 +13,9 @@ connectDB();
 app.use(express.json());
 
 // Routes
-app.use('/api', userRoutes);
-app.use('/api', collectionRoutes);
-app.use('/api', itemRoutes);
+app.use('/api/v1/', userRoutes);
+app.use('/api/v1/', collectionRoutes);
+app.use('/api/v1/', itemRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

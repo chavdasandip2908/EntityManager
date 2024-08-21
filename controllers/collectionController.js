@@ -1,6 +1,7 @@
 const Collection = require('../models/Collection');
 const User = require('../models/User');
 const Item = require('../models/Item');
+const handleDuplicateKeyError = require('../config/common');
 
 
 // Create a new collection
@@ -23,7 +24,6 @@ exports.createCollection = async (req, res) => {
 
     // If parentId is provided, add this collection's reference to the parent collection's childCollections
     if (collectionData.parentId || collectionData.parentId !== null) {
-      console.log("prent present");
       const parentCollection = await Collection.findById(collectionData.parentId);
       if (parentCollection) {
         parentCollection.childCollections.push({ id: collection._id, type: 'Collection' });
@@ -31,26 +31,44 @@ exports.createCollection = async (req, res) => {
       }
     } else {
       // If parentId is null, add this collection to the user's mainCollection
-      console.log("perent no present");
       const user = await User.findById(req.user.id);
       user.mainCollection.push({ id: collection._id, type: 'Collection' });
       const addAyy = await user.save();
       console.log(addAyy);
     }
 
-    res.status(201).json(collection);
+    res.status(201).json({
+      statusCode: 201,
+      message: 'Collection created successfully.',
+      data: collection,
+    });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({
+      statusCode: status,
+      message,
+      data: null,
+    });
   }
 };
 
 // Get all collections
 exports.getCollections = async (req, res) => {
   try {
-    const collections = await Collection.find();
-    res.json(collections);
+    // Fetch only the required fields: name, id, description, and parentId
+    const collections = await Collection.find().select('name _id description parentId');
+
+    res.status(200).json({
+      statusCode: 200,
+      message: 'Collections fetched successfully.',
+      data: collections,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      statusCode: 500,
+      message: 'An error occurred while fetching collections. Please try again later.',
+      data: null,
+    });
   }
 };
 
@@ -71,35 +89,84 @@ exports.getCollectionById = async (req, res) => {
 
     collection.childCollections = childCollectionDetails;
 
-    res.json(collection);
+    res.status(200).json({
+      statusCode: 200,
+      message: 'Collection fetched successfully.',
+      data: collection,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({
+      statusCode: status,
+      message,
+      data: null,
+    });
   }
 };
 
 // Update a collection
 exports.updateCollection = async (req, res) => {
   try {
-    const collectionData = req.body;
+    const collectionData = { ...req.body };
 
     // If modifiedBy is not provided, set it to req.user.id
     if (!collectionData.modifiedBy) {
       collectionData.modifiedBy = req.user.id;
     }
 
-    const collection = await Collection.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!collection) return res.status(404).json({ message: 'Collection not found' });
-    res.json(collection);
+    // Prevent certain fields like _id from being updated
+    delete collectionData._id;
+    delete collectionData.createBy;
+    delete collectionData.createAt;
+
+    const collection = await Collection.findByIdAndUpdate(req.params.id, collectionData, { new: true, lean: true });
+
+    if (!collection) {
+      return res.status(404).json({
+        statusCode: 404,
+        message: 'Collection not found. The provided ID does not match any existing collection.',
+        data: null,
+      });
+    }
+
+    // Return only relevant fields in the response
+    const responseData = {
+      _id: collection._id,
+      name: collection.name,
+      description: collection.description,
+      parentId: collection.parentId,
+      modifiedBy: collection.modifiedBy,
+      modifiedAt: collection.modifiedAt,
+    };
+
+    res.status(200).json({
+      statusCode: 200,
+      message: 'Collection updated successfully.',
+      data: responseData,
+    });
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({
+      statusCode: status,
+      message,
+      data: null,
+    });
   }
 };
+
 // Delete a collection
 exports.deleteCollection = async (req, res) => {
   try {
     const collection = await Collection.findById(req.params.id);
 
-    if (!collection) return res.status(404).json({ message: 'Collection not found' });
+    if (!collection) {
+      return res.status(404).json({
+        statusCode: 404,
+        message: 'Collection not found. The provided ID does not match any existing collection.',
+        data: null,
+      });
+    }
 
     // Check if the parentId is null
     if (collection.parentId === null) {
@@ -121,9 +188,19 @@ exports.deleteCollection = async (req, res) => {
     // Now delete the collection
     await collection.deleteOne();
 
-    res.json({ message: 'Collection deleted' });
+    res.status(200).json({
+      statusCode: 200,
+      message: 'Collection successfully deleted.',
+      data: null,
+    });
+    
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({
+      statusCode: status,
+      message,
+      data: null,
+    });
   }
 };
 
