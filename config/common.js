@@ -1,4 +1,5 @@
 module.exports = function handleDuplicateKeyError(error) {
+    console.log(error);
 
     if (error.code === 11000) {
         const field = Object.keys(error.keyValue)[0]; // Get the field that caused the duplicate key error
@@ -12,7 +13,7 @@ module.exports = function handleDuplicateKeyError(error) {
             message: friendlyMessage,
         };
     }
-    
+
 
     // If it's not a duplicate key error, return a generic error message
     return {

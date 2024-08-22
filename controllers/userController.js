@@ -170,11 +170,13 @@ exports.getUserById = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const updateData = { ...req.body };
+
     delete updateData.password;
+    delete updateData.email;
 
     const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true, lean: true });
 
-    if (!user) {
+    if (!updatedUser) {
       return res.status(404).json({
         statusCode: 404,
         message: 'User not found. The provided ID does not match any registered user.',
@@ -202,9 +204,20 @@ exports.updateUser = async (req, res) => {
 // Delete a user
 exports.deleteUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    // Check if the user ID from the token matches the ID in the request parameters
+    console.log("req.user._id : ",req.user._id);
+    console.log("req.params.id : ",req.params.id);
+    
+    if (req.user._id != req.params.id) {
+      return res.status(403).json({
+        statusCode: 403,
+        message: 'Unauthorized action. You can only delete your own account.',
+        data: null,
+      });
+    }
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
 
-    if (!user) {
+    if (!deletedUser) {
       return res.status(404).json({
         statusCode: 404,
         message: 'User not found. The provided ID does not match any registered user.',
