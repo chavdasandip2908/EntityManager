@@ -204,10 +204,7 @@ exports.updateUser = async (req, res) => {
 // Delete a user
 exports.deleteUser = async (req, res) => {
   try {
-    // Check if the user ID from the token matches the ID in the request parameters
-    console.log("req.user._id : ",req.user._id);
-    console.log("req.params.id : ",req.params.id);
-    
+    // Check if the user ID from the token matches the ID in the request parameters     
     if (req.user._id != req.params.id) {
       return res.status(403).json({
         statusCode: 403,
