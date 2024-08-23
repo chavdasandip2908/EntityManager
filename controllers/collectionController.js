@@ -193,7 +193,7 @@ exports.deleteCollection = async (req, res) => {
       message: 'Collection successfully deleted.',
       data: null,
     });
-    
+
   } catch (error) {
     const { status, message } = handleDuplicateKeyError(error);
     res.status(status).json({
@@ -203,4 +203,83 @@ exports.deleteCollection = async (req, res) => {
     });
   }
 };
+
+exports.shareCollection = async (req, res) => {
+  try {
+    const { collectionId, userIdToShareWith } = req.body;
+
+    // Find the collection to be shared
+    const collection = await Collection.findById(collectionId);
+    if (!collection) {
+      return res.status(404).json({
+        statusCode: 404,
+        message: 'Collection not found. The provided ID does not match any collection.',
+        data: null,
+      });
+    }
+
+    // Check if the current user is the owner of the collection
+    if (collection.createBy.toString() !== req.user.id) {
+      return res.status(403).json({
+        statusCode: 403,
+        message: 'Unauthorized action. You can only share your own collections.',
+        data: null,
+      });
+    }
+
+    // Validate that the user to share with exists
+    const userToShareWith = await User.findById(userIdToShareWith);
+    if (!userToShareWith) {
+      return res.status(404).json({
+        statusCode: 404,
+        message: 'Receiving user not found. The provided ID does not match any registered user.',
+        data: null,
+      });
+    }
+
+    // Ensure the collection has a `sharedWith` array
+    if (!Array.isArray(collection.sharedWith)) {
+      collection.sharedWith = [];
+    }
+
+    // Check if the collection is already shared with the user
+    const alreadyShared = collection.sharedWith.some(share => share.to.toString() === userIdToShareWith);
+    if (alreadyShared) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: 'Collection is already shared with this user.',
+        data: null,
+      });
+    }
+
+    // Add the sharing information
+    collection.sharedWith.push({
+      to: userIdToShareWith,
+      from: req.user.id,
+      sharedAt: new Date()
+    });
+
+    // Save the updated collection
+    await collection.save();
+
+    res.status(200).json({
+      statusCode: 200,
+      message: 'Collection shared successfully.',
+      data: {
+        sharedWith: userToShareWith._id,
+        collection: collection._id,
+      },
+    });
+  } catch (error) {
+    console.error('Error sharing collection:', error);
+
+    res.status(500).json({
+      statusCode: 500,
+      message: 'An error occurred while sharing the collection. Please try again later.',
+      data: null,
+    });
+  }
+};
+
+
 
