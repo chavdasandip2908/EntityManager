@@ -103,24 +103,30 @@ exports.getCollectionById = async (req, res) => {
     });
   }
 };
+
+
 exports.getItemByCollectionId = async (req, res) => {
   try {
     const collection = await Collection.findById(req.params.id).lean(); // Use lean to convert to a plain JavaScript object
 
     if (!collection) return res.status(404).json({ message: 'Collection not found' });
 
-    const collectionItems = await Promise.all(collection.childCollections.map(async (child) => {
-      if (child.type === 'Item') {
-        return await Item.findById(child.id).lean();
-      }
-    }));
+    const collectionItems = await Promise.all(
+      collection.childCollections.map(async (child) => {
+        if (child.type === 'Item') {
+          const item = await Item.findById(child.id).lean();
+          return item; // Only return if the item exists
+        }
+      })
+    );
 
-
+    // Filter out any undefined results
+    const filteredItems = collectionItems.filter(Boolean);
 
     res.status(200).json({
       statusCode: 200,
       message: 'Collection Items fetched successfully.',
-      data: collectionItems,
+      data: filteredItems,
     });
   } catch (error) {
     const { status, message } = handleDuplicateKeyError(error);
@@ -131,6 +137,7 @@ exports.getItemByCollectionId = async (req, res) => {
     });
   }
 };
+
 
 // Update a collection
 exports.updateCollection = async (req, res) => {
