@@ -56,7 +56,8 @@ exports.createCollection = async (req, res) => {
 exports.getCollections = async (req, res) => {
   try {
     // Fetch only the required fields: name, id, description, and parentId
-    const collections = await Collection.find().select('name _id description parentId');
+    const collections = await Collection.find({ parentId: null }).select('name _id description parentId');
+
 
     res.status(200).json({
       statusCode: 200,

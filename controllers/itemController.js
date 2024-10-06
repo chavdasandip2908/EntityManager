@@ -64,7 +64,8 @@ exports.createItem = async (req, res) => {
 // Get all items with specific fields
 exports.getItems = async (req, res) => {
   try {
-    const items = await Item.find({}, 'id name type description');
+    const items = await Item.find({ parentId: null }).select('id name type description');
+
     res.json({
       statusCode: 200,
       message: 'Items fetched successfully.',
