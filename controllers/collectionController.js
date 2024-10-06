@@ -103,6 +103,34 @@ exports.getCollectionById = async (req, res) => {
     });
   }
 };
+exports.getItemByCollectionId = async (req, res) => {
+  try {
+    const collection = await Collection.findById(req.params.id).lean(); // Use lean to convert to a plain JavaScript object
+
+    if (!collection) return res.status(404).json({ message: 'Collection not found' });
+
+    const collectionItems = await Promise.all(collection.childCollections.map(async (child) => {
+      if (child.type === 'Item') {
+        return await Item.findById(child.id).lean();
+      }
+    }));
+
+
+
+    res.status(200).json({
+      statusCode: 200,
+      message: 'Collection Items fetched successfully.',
+      data: collectionItems,
+    });
+  } catch (error) {
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({
+      statusCode: status,
+      message,
+      data: null,
+    });
+  }
+};
 
 // Update a collection
 exports.updateCollection = async (req, res) => {
