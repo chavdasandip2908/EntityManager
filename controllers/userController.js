@@ -166,6 +166,61 @@ exports.getUserById = async (req, res) => {
   }
 };
 
+exports.getCollectionByUserId = async (req, res) => {
+  try {
+    // Find the user by ID and convert the document to a plain JavaScript object
+    const user = await User.findById(req.params.id).lean();
+
+    if (!user) {
+      return res.status(404).json({
+        statusCode: 404,
+        message: 'User not found. The provided ID does not match any registered user.',
+        data: null,
+      });
+    }
+
+    let collections = [];
+    let items = [];
+
+    // Iterate over mainCollection to count the types
+    for (const item of user.mainCollection) {
+      if (item.type === 'Collection') {
+        const c = await Collection.findById(item.id);
+        collections.push(c);
+      }
+      else if (item.type === 'Item') {
+        const i = await Item.findById(item.id);
+        items.push(i);
+      }
+    }
+
+
+
+    const responseData = {
+      name: user.name,
+      email: user.email,
+      mobile: user.mobile,
+      image: user.image,
+      collections, // Count of 'Collection' type items
+      items, // Count of 'Item' type items
+    };
+
+    // Send the filtered user data as a response
+    res.status(200).json({
+      statusCode: 200,
+      message: 'User details retrieved successfully.',
+      data: responseData,
+    });
+  } catch (error) {
+    const { status, message } = handleDuplicateKeyError(error);
+    res.status(status).json({
+      statusCode: status,
+      message,
+      data: null,
+    });
+  }
+};
+
 // Update a user
 exports.updateUser = async (req, res) => {
   try {
