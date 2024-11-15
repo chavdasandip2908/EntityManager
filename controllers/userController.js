@@ -180,7 +180,7 @@ exports.getCollectionByUserId = async (req, res) => {
     }
 
     let collections = [];
-    let items = [];
+    // let items = [];
 
     // Iterate over mainCollection to count the types
     for (const item of user.mainCollection) {
@@ -188,10 +188,10 @@ exports.getCollectionByUserId = async (req, res) => {
         const c = await Collection.findById(item.id);
         collections.push(c);
       }
-      else if (item.type === 'Item') {
-        const i = await Item.findById(item.id);
-        items.push(i);
-      }
+      // else if (item.type === 'Item') {
+      //   const i = await Item.findById(item.id);
+      //   items.push(i);
+      // }
     }
 
 
@@ -202,7 +202,7 @@ exports.getCollectionByUserId = async (req, res) => {
       mobile: user.mobile,
       image: user.image,
       collections, // Count of 'Collection' type items
-      items, // Count of 'Item' type items
+      // items, // Count of 'Item' type items
     };
 
     // Send the filtered user data as a response

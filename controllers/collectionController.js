@@ -83,9 +83,7 @@ exports.getCollectionById = async (req, res) => {
     const childCollectionDetails = await Promise.all(collection.childCollections.map(async (child) => {
       if (child.type === 'Collection') {
         return await Collection.findById(child.id).lean();
-      } else if (child.type === 'Item') {
-        return await Item.findById(child.id).lean();
-      }
+      } 
     }));
 
     collection.childCollections = childCollectionDetails;
